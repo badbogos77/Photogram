@@ -22,12 +22,10 @@ public class PrincipalDetailsService implements UserDetailsService {
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		
 		User userEntity = userRepository.findByUsername(username);
-		System.out.println("PrincipalUser정보=============>" + userEntity);
-		if (userEntity == null) {
-			System.out.println("userEntity=============> null" );
+	
+		if (userEntity == null) {		
 			return null;
-		} else {
-			System.out.println("PrincipalUser정보=============>" + new PrincipalUserDetails(userEntity));
+		} else {			
 			// UserDetails로 리턴해야함
 			return new PrincipalUserDetails(userEntity);
 		}		
