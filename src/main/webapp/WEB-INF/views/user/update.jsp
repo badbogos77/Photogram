@@ -53,7 +53,7 @@
 				<div class="content-item__06">
 					<div class="item__title">소개</div>
 					<div class="item__input">
-						<textarea name="bio" id="" rows="3">${pricipal.user.bio}</textarea>
+						<textarea name="bio" id="" rows="3"  >${principal.user.bio}</textarea>
 					</div>
 				</div>
 				<div class="content-item__07">
