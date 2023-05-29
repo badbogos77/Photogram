@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.cos.photogramstart.config.auth.PrincipalUserDetails;
 import com.cos.photogramstart.domain.user.User;
@@ -33,6 +34,13 @@ public class UserApiController {
 	
 	private final UserService userService;
 	private final SubscribeService subscribeService;
+	
+	@PutMapping("/api/user/{principalId}/profileImageUrl")
+	public ResponseEntity<?> profileImageUrlUpdate(@PathVariable int principalId, MultipartFile profileImageFile, @AuthenticationPrincipal PrincipalUserDetails principalUserDetails) {
+		User userEntity = userService.프로필사진변경(principalId, profileImageFile);
+		principalUserDetails.setUser(userEntity);
+		return new ResponseEntity<>(new CMRespDto<>(1, "프로필 사진 변경완료", null), HttpStatus.OK);
+	}
 	
 	@GetMapping("/api/user/{pageuserid}/subscribe")
 	public ResponseEntity<?> subscribe(@PathVariable int pageuserid, @AuthenticationPrincipal PrincipalUserDetails principalUserDetails) {

@@ -2,13 +2,21 @@ package com.cos.photogramstart.service;
 
 
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.cos.photogramstart.domain.subscribe.SubscribeRepository;
 import com.cos.photogramstart.domain.user.User;
 import com.cos.photogramstart.domain.user.UserRepository;
+import com.cos.photogramstart.handler.ex.CustomAPIException;
 import com.cos.photogramstart.handler.ex.CustomException;
 import com.cos.photogramstart.handler.ex.CustomValidationAPIException;
 import com.cos.photogramstart.web.dto.user.UserProfileDto;
@@ -18,11 +26,37 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Service
 public class UserService {
+	
+	@Value("${file.path}")
+	private String uploadFolder;
 
 	private final UserRepository userRepository;
 	private final SubscribeRepository subscribeRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;	
 	
+	@Transactional
+	public User 프로필사진변경(int principalId, MultipartFile file) {
+		UUID uuid = UUID.randomUUID();
+		String imageFileName = uuid+"_" + file.getOriginalFilename();
+		
+		Path imageFilePath = Paths.get(uploadFolder+imageFileName);
+		
+		try
+		{
+			Files.write(imageFilePath, file.getBytes());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		User userEntity = userRepository.findById(principalId).orElseThrow(()-> {
+			throw new CustomAPIException("해당 프로필이 존재하지 않습니다.");
+		});
+		
+		userEntity.setProfileImageUrl(imageFileName);
+		return userEntity;
+	}
+	
+	@Transactional(readOnly = true)
 	public UserProfileDto 회원프로필(int pageUserid, int principalId) {
 		UserProfileDto dto = new UserProfileDto();
 		

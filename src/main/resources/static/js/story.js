@@ -6,11 +6,13 @@
 	(4) 댓글쓰기
 	(5) 댓글삭제
  */
+ 
+ let page = 0;
 
 // (1) 스토리 로드하기
 function storyLoad() {
 	$.ajax({
-		url: `/api/images`,
+		url: `/api/images?page=${page}`,
 		dataType: "json"
 	}).done(res=>{
 		console.log(res.data);		
@@ -39,16 +41,21 @@ function getStoryItem(image) {
 	</div>
 	<div class="sl__item__contents">
 		<div class="sl__item__contents__icon">
-			<button>
-				<i class="fas fa-heart active" id="storyLikeIcon-1" onclick="toggleLike()"></i>
+			<button>`;
+			 if (image.likesState) {
+	 			itemstory +=	`<i class="fas fa-heart active" id="storyLikeIcon-${image.id}" onclick="toggleLike(${image.id})"></i>`
+			} else {
+				itemstory +=	`<i class="far fa-heart " id="storyLikeIcon-${image.id}" onclick="toggleLike(${image.id})"></i>`
+			}
+			itemstory += `	
 			</button>
 		</div>
-		<span class="like"><b id="storyLikeCount-1">3 </b>likes</span>
+		<span class="like"><b id="storyLikeCount-${image.id}">${image.likesCount}</b>likes</span>
 		<div class="sl__item__contents__content">
 			<p>${image.caption}</p>
 		</div>
 		<div id="storyCommentList-1">
-			<div class="sl__item__contents__comment" id="storyCommentItem-1"">
+			<div class="sl__item__contents__comment" id="storyCommentItem-1">
 				<p>
 					<b>Lovely :</b> 부럽습니다.
 				</p>
@@ -58,7 +65,7 @@ function getStoryItem(image) {
 			</div>
 		</div>
 		<div class="sl__item__input">
-			<input type="text" placeholder="댓글 달기..." id="storyCommentInput-1" />
+			<input type="text" placeholder="댓글 달기..." id="storyCommentInput-${image.id}" />
 			<button type="button" onClick="addComment()">게시</button>
 		</div>
 	</div>
@@ -69,31 +76,60 @@ function getStoryItem(image) {
 
 // (2) 스토리 스크롤 페이징하기
 $(window).scroll(() => {
-	console.log("window scrolltop : ", $(window).scrollTop());
+/*	console.log("window scrolltop : ", $(window).scrollTop());
 	console.log("document.height : ", $(document).height());
-	console.log("window height: ", $(window).height());
+	console.log("window height: ", $(window).height());*/
 	
 	let checkNum =  $(window).scrollTop() - ($(document).height() - $(window).height());
 	
-	console.log("checkNum", checkNum);	
+//	console.log("checkNum", checkNum);	
 	
-	if (checkNum > 0) {
+	if (checkNum < 1 && checkNum > -1  ) {
+		page++;
 		storyLoad();
 	}
 });
 
 
 // (3) 좋아요, 안좋아요
-function toggleLike() {
-	let likeIcon = $("#storyLikeIcon-1");
-	if (likeIcon.hasClass("far")) {
-		likeIcon.addClass("fas");
-		likeIcon.addClass("active");
-		likeIcon.removeClass("far");
-	} else {
-		likeIcon.removeClass("fas");
-		likeIcon.removeClass("active");
-		likeIcon.addClass("far");
+function toggleLike(imageId) {
+	let likeIcon = $(`#storyLikeIcon-${imageId}`);
+	if (likeIcon.hasClass("far")) {  // 좋아요를 눌렀을때
+		$.ajax({
+			type: "post",
+			url: `/api/images/${imageId}/likes`,
+			dataType: "json"
+		}).done(res=> {
+			console.log("success", res);
+			likeIcon.addClass("fas");
+			likeIcon.addClass("active");
+			likeIcon.removeClass("far");
+			
+			let likecount = Number($(`#storyLikeCount-${imageId}`).text()) + 1;
+			console.log("likecount", likecount);
+			$(`#storyLikeCount-${imageId}`).text(likecount);
+		
+		}).fail(error => {
+			console.log("error", error);
+		});
+	} else {									  // 좋아요를 취소할때
+		$.ajax({
+			type: "delete",
+			url: `/api/images/${imageId}/likes`,
+			dataType: "json"
+		}).done(res=> {
+			console.log("success", res);
+			likeIcon.removeClass("fas");
+			likeIcon.removeClass("active");
+			likeIcon.addClass("far");
+			
+			let likecount = Number($(`#storyLikeCount-${imageId}`).text()) - 1;
+			console.log("likecount", likecount);
+			$(`#storyLikeCount-${imageId}`).text(likecount);
+			
+		}).fail(error => {
+			console.log("error", error);
+		});		
 	}
 }
 

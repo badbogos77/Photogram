@@ -3,6 +3,7 @@ package com.cos.photogramstart.service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -28,9 +29,28 @@ public class ImageService {
 	private final ImageRepository imageRepository;
 	
 	@Transactional(readOnly=true)
+	public List<Image> 인기사진보기() {
+		List<Image> popular = imageRepository.mPopular();
+		
+		return popular;
+	}
+	
+	@Transactional(readOnly=true)
 	public Page<Image> 이미지히스토리(int principalId, Pageable pageable) {
 	
 	  Page<Image> images = imageRepository.images(principalId, pageable);
+	  
+	  // 좋아요 도 가지고 가야함
+	  images.forEach((image)-> {
+		  image.getLikes().forEach((like)-> {
+			  
+			  image.setLikesCount(image.getLikes().size());
+			  
+			  if (like.getUser().getId() == principalId) {
+				  image.setLikesState(true);
+			  }
+		  }); 
+	  });
 		return images;
 	}
 	
